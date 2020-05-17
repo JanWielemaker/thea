@@ -199,7 +199,10 @@ plsyn2owl(Pl,Owl) :-
         maplist(plsyn2owl,Args,Args2),
         Owl=..[OwlPred,[Args2]].
 
-% TODO: entity annotations
+% Entity annotation
+plsyn2owl(Annot of Ent -- Text,annotationAssertion(Annot,Ent,literal(Text))):- !.
+
+% TODO: Axiom annotation  -- the existing definition below doesn't work
 plsyn2owl(Ax--Comments,[PlAx,axiomAnnotation('rdfs:comment',literal(Comments))]) :-
         !,
         plsyn2owl(Ax,PlAx).

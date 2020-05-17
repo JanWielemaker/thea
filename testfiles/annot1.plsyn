@@ -1,0 +1,29 @@
+ontology('http://temp.org/temp.ttl').
+
+%%%% some common annotation declarations
+annotationProperty('http://www.w3.org/2000/01/rdf-schema#label').
+annotationProperty('http://www.w3.org/2000/01/rdf-schema#comment').
+annotationProperty('http://purl.org/dc/elements/1.1/description').
+annotationProperty('http://purl.org/dc/elements/1.1/title').
+annotationProperty('http://xmlns.com/foaf/0.1/homepage').
+
+%%%% an annotation property that is part of the ontology in this file
+annotationProperty('http://temp.org/temp.ttl#description').
+
+
+%%%% annotation examples
+'dc:title' of 'http://temp.org/temp.ttl' -- 'An ontology with annotation examples'.
+'foaf:homepage' of 'http://temp.org/temp.ttl' -- 'http://temp.org/temp.ttl'.
+'dc:description' of fu -- 'the first syllable of fubar'.
+'rdfs:label' of fu -- fu.
+
+%%%%    readability is improved with localised annotation properties. For this,
+%       we can declare a local annotation property to be equivalent to a property in another namespace
+%
+description =@= 'dc:description'.
+description of bar -- 'the second syllable of fubar'.
+
+
+%%%% annotation on an entire axiom.  This doesn't work in the current owl_plsyn.pl code 
+% fu < bar -- 'axiom notation: fubar'.
+
