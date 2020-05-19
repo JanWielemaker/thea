@@ -1,0 +1,49 @@
+@prefix :       <http://temp/temp.ttl#> .
+
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:     <http://purl.org/dc/elements/1.1/> .
+@prefix foaf:   <http://xmlns.com/foaf/0.1/> .
+
+@prefix bfo:    <http://purl.obolibrary.org/obo/bfo.owl#> .
+@prefix ro:     <http://www.obofoundry.org/ro/ro.owl#> .
+@prefix obo:    <http://purl.obolibrary.org/obo/> .
+@prefix cco:    <http://www.ontologyrepository.com/CommonCoreOntologies/> .
+
+@base <http://temp/temp.ttl> .
+
+# Annotation Properties
+rdfs:label      a owl:AnnotationProperty.
+rdfs:comment    a owl:AnnotationProperty.
+:description    a owl:AnnotationProperty ; owl:equivalentProperty dc:description .
+:definition     a owl:AnnotationProperty ; owl:equivalentProperty cco:definition .
+:source         a owl:AnnotationProperty ; owl:equivalentProperty cco:definition_source .
+:acronym        a owl:AnnotationProperty ; owl:equivalentProperty cco:acronym .
+:altlabel       a owl:AnnotationProperty ; owl:equivalentProperty cco:alternative_label .
+:usage          a owl:AnnotationProperty ; owl:equivalentProperty cco:example_of_usage .
+
+# The ontology itself defined as a thing
+<http://temp/temp.ttl>  
+    a owl:Ontology ;
+    owl:versionIRI <https://github.com/TempAccount/temp/temp.ttl/1.0.0> ;
+    dc:title "Ontology Template" ;
+    foaf:homepage "https://github.com/TempAccount/temp" ;
+    :description "An ontology template." .
+
+<fu>
+    a owl:Class;
+    rdfs:subClass of :bar;
+    rdfs:label literal("fu");
+    :description literal("fu is the first syllable of fubar").
+
+<bar>
+    a owl:Class;
+    rdfs:subClass of owl:thing;
+    rdfs:label literal("bar");
+    :description literal("bar is the second syllable of fubar").
+
+
+
+

@@ -1,0 +1,24 @@
+ontology('http://temp.org/temp.ttl').
+
+%%%% using namespaces that are known by default
+annotationProperty('rdfs:label').
+annotationProperty('rdfs:comment').
+annotationProperty('dc:description').
+annotationProperty('dc:title').
+annotationProperty('foaf:homepage').
+
+%%%% declaring a new namespace prefix
+pref(cco, 'http://www.ontologyrepository.com/CommonCoreOntologies/').
+
+%%% ...and an annotation properties based on the new prefix
+annotationProperty('cco:acronym').
+
+%%%% annotation examples
+'dc:title' of 'http://temp.org/temp.ttl' -- 'An ontology with annotation examples'.
+'foaf:homepage' of 'http://temp.org/temp.ttl' -- 'http://temp.org/temp.ttl'.
+
+'dc:description' of fu -- 'the first syllable of fubar'.
+'rdfs:label' of fu -- fu.
+
+'cco:acronym' of bar -- 'beyond all recognition'.
+

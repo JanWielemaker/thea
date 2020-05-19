@@ -235,9 +235,9 @@ replace_ns_prefix(_,_,X,X).
 contract_ns(URI,ID) :-
         atom(URI),
         rdf_global_id(NS:Local,URI),
-        NS \= rdf,
-        NS \= rdfs,
-        NS \= owl,
+%        NS \= rdf,
+%        NS \= rdfs,
+%        NS \= owl,
         !,
         atomic_list_concat([NS,Local],':',ID).
 contract_ns(X,X).
@@ -301,9 +301,12 @@ translate_IRIs(Goal):-
                               map_IRIs(Goal,O,O2)),
                            Os),
                    retract_axiom(A),
-                   assert_axiom(A2),
-                   forall(member(O,Os),
-                          assert_axiom(A2,O)))).
+                   (    Os=[]                   % avoid duplicate assertions 
+                   ->   assert_axiom(A2)
+                   ;    forall(member(O,Os),
+                          assert_axiom(A2,O))
+                   )
+                )).
 
 :- module_transparent translate_IRIs/2.
 translate_IRIs(Goal,Ontology):-

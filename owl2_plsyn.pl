@@ -42,6 +42,7 @@
 :- use_module(owl2_util).
 :- use_module(swrl).
 :- use_module(library(readutil)).
+:- use_module(library(semweb/rdf_prefixes)).
 
 :- op(980,xfy,(--)).
 :- op(950,fx,individual).
@@ -96,13 +97,19 @@ owl_parse_plsyn(File,_Opts) :-
         (   at_end_of_stream(IO)
         ->  true
         ;   read_term(IO,PlTerm,[module(owl2_plsyn)]),
-            plsyn2owl(PlTerm,Axiom),
-            (   nb_current(ontology,Ont)
-            ->  assert_axiom(Axiom,Ont)
-            ;   assert_axiom(Axiom)),
-            (   Axiom=ontology(OntNew)
-            ->  nb_setval(ontology,OntNew)
-            ;   true),
+            (   PlTerm = pref(_,_)
+            ->  (  PlTerm = pref(Prefix,URI),
+                   rdf_register_prefix(Prefix,URI,[keep(true)])
+                )
+            ;   (   plsyn2owl(PlTerm,Axiom),
+                    (   nb_current(ontology,Ont)
+                    ->  assert_axiom(Axiom,Ont)
+                    ;   assert_axiom(Axiom)),
+                    (   Axiom=ontology(OntNew)
+                    ->  nb_setval(ontology,OntNew)
+                    ;   true)
+                )
+            ),
             fail),
         close(IO).
 
@@ -115,13 +122,21 @@ write_owl_as_plsyn(Opts):-
         Onts=[FirstOnt|_],		% ensure ontology/1 is written at top...
         format('~q.~n', [ontology(FirstOnt)]),	% use first ontology as
                                                 % new ontology name
+        % save any non-default prefixes
+        write_plsyn_prefixes,
         % this clause optimized for ontology filtering
-        forall((member(Ont,Onts),
-                ontologyAxiom(Ont,A),
-                A\=ontology(_),
-                \+exclude_axiom(A,Opts)),
-	       (   plsyn_owl(Pl,A,Opts),
-		   format('~q.~n',[Pl]))).
+        forall(  (  member(Ont,Onts),
+                    ontologyAxiom(Ont,A),
+                    A\=ontology(_),
+                    \+exclude_axiom(A,Opts)
+                 ),
+                 (  plsyn_owl(Pl,A,Opts),
+                    (  Pl=annotationAssertion(P,S,O)           % write annotations as infix notation
+                    -> format('~q of ~q -- ~q.~n',[P,S,O])
+                    ;  format('~q.~n',[Pl])
+                    )
+                 )
+               ).
 
 write_owl_as_plsyn(Opts):-
 	% ensure to write ontology/1 at the top, if it exists
@@ -129,11 +144,49 @@ write_owl_as_plsyn(Opts):-
         ->  format('~q.~n', [ontology(Ont)])
         ;   true
         ),
-        forall((axiom(A),
-		A\=ontology(_),
-		\+exclude_axiom(A,Opts)),
-	       (   plsyn_owl(Pl,A,Opts),
-		   format('~q.~n',[Pl]))).
+        write_plsyn_prefixes,
+        forall(  (  axiom(A),
+		    A\=ontology(_),
+                    \+exclude_axiom(A,Opts)
+                 ),
+	         (   plsyn_owl(Pl,A,Opts),
+                     (  Pl=annotationAssertion(P,S,O)           % write annotations as infix notation
+                     -> format('~q of ~q -- ~q.~n',[P,S,O])
+                      ;  format('~q.~n',[Pl])
+                      )
+                 )
+               ).
+
+% write any non-default prefixes
+write_plsyn_prefixes:-
+        setof(P^U,rdf_current_prefix(P,U),Ps),
+        Defaults = [dc^_,dcterms^_,eor^_,foaf^_,owl^_,owlx^_,rdf^_,rdfs^_,serql^_,skos^_,swrl^_,swrlb^_,void^_,xsd^_],
+        ord_delall(Defaults,Ps,Prefs),
+        maplist(write_plsyn_prefix,Prefs).
+
+write_plsyn_prefix(Prefix^URI):-
+        format('pref(~q,~q).~n',[Prefix,URI]).
+
+% ordered set delete that allows unification
+%% ord_delel(+Set, +El, -Del)
+%   ordered set element deletion
+% TODO: this really should be a general ord predicate
+
+ord_delel([], _El, []).
+ord_delel([H|T],H,T).
+ord_delel([H|T], El, Del) :-
+    compare(Order, H, El),
+    del_el(Order, H, T, El, Del).
+
+del_el(<,  H, T,  El, [H|Del]) :-
+    ord_delel(T, El, Del).
+del_el(>,  H, T, _El, [H|T]).
+
+% delete all elements Xs from a Set
+ord_delall([],Result,Result).
+ord_delall([X|Xs],Set,Result):- ord_delel(Set,X,New), !, ord_delall(Xs,New,Result).
+
+
 
 % TODO: move somewhere generic
 exclude_axiom(H,Opts) :-
@@ -200,9 +253,9 @@ plsyn2owl(Pl,Owl) :-
         Owl=..[OwlPred,[Args2]].
 
 % Entity annotation
-plsyn2owl(Annot of Ent -- Text,annotationAssertion(Annot,Ent,literal(Text))):- !.
+plsyn2owl(Annot of Ent -- Text,annotationAssertion(Annot,Ent,literal(Text))):-!.
 
-% TODO: Axiom annotation  -- the existing definition below doesn't work
+% TODO: Axiom annotation  -- this existing definition below doesn't work
 plsyn2owl(Ax--Comments,[PlAx,axiomAnnotation('rdfs:comment',literal(Comments))]) :-
         !,
         plsyn2owl(Ax,PlAx).
